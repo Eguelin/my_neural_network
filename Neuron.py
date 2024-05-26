@@ -16,6 +16,8 @@ class Neuron:
 	Methods:
 		model_dataset: model function for dataset
 		model: model function
+		predict_dataset: predict function for dataset
+		predict: predict function
 		loss: loss function
 		train: train function
 	Methods (private):
