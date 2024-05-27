@@ -148,9 +148,9 @@ class Neuron:
 			y: reference data
 			lr: learning rate
 			epochs: number of epochs
-			display: display flag
 			X_test: test input data
 			y_test: test reference data
+			display: display flag
 		Returns:
 			None
 		"""
@@ -190,10 +190,11 @@ class Neuron:
 		plt.subplot(1, 2, 1)
 		plt.plot(loss)
 		plt.plot(loss_test)
+		plt.title("Loss")
 		plt.subplot(1, 2, 2)
 		plt.plot(acc)
 		plt.plot(acc_test)
-		plt.title("Train loss")
+		plt.title("Accuracy")
 		plt.show()
 
 
