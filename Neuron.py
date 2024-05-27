@@ -22,6 +22,13 @@ class Neuron:
 
 
 	def __init__(self, dim: int = None, W: np.ndarray = None, b: float = None):
+		"""
+		Constructor method
+		Args:
+			dim: input dimension
+			W: weights
+			b: bias
+		"""
 		if dim is not None and dim <= 0 and W is None:
 			raise ValueError("Error: Input dimension must be greater than 0")
 
