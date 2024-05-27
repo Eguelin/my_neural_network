@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from tqdm import tqdm
 from typing import List, Tuple
 from sklearn.metrics import accuracy_score
 
@@ -105,8 +106,8 @@ class Neuron:
 		"""
 		if A.shape != y.shape:
 			raise ValueError("Error: Output data and reference data must have the same shape")
-		s = 1e-8
-		return float(1 / len(y) * np.sum(-y * np.log(A + s) - (1 - y) * np.log(1 - A + s)))
+		epsilon: float = 1e-15
+		return float(1 / len(y) * np.sum(-y * np.log(A + epsilon) - (1 - y) * np.log(1 - A + epsilon)))
 
 
 	def __gradient(self, X: np.ndarray, A: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
@@ -156,46 +157,43 @@ class Neuron:
 		if X.shape[0] != y.shape[0] or (X_test is not None and y_test is not None and X_test.shape[0] != y_test.shape[0] != X.shape[0]):
 			raise ValueError("Error: Input data and reference data must have the same number of samples")
 
-		loss: List[float] = []
-		loss_test: List[float] = []
+		if display:
+			loss: List[float] = []
+			acc: List[float] = []
+			loss_test: List[float] = []
+			acc_test: List[float] = []
 
-		for i in range(epochs):
+		for i in tqdm(range(epochs)):
 			A: np.ndarray = self.model_dataset(X)
 			self.__update_weights(X, A, y, lr)
-			loss.append(self.loss(A, y))
-			if display and X_test is not None and y_test is not None:
-				A_test = self.model_dataset(X_test)
-				loss_test.append(self.loss(A_test, y_test))
+			if display and i % 10 == 0:
+				loss.append(self.loss(A, y))
+				acc.append(accuracy_score(y, self.predict_dataset(X)))
+				if X_test is not None and y_test is not None:
+					loss_test.append(self.loss(self.model_dataset(X_test), y_test))
+					acc_test.append(accuracy_score(y_test, self.predict_dataset(X_test)))
 
 		if display:
-			self.__display(X, y, X_test, y_test, loss, loss_test)
+			self.__display(loss, acc, loss_test, acc_test)
 
 
-	def __display(self, X: np.ndarray, y: np.ndarray, X_test: np.ndarray, y_test: np.ndarray, loss: List[float], loss_test: List[float]) -> None:
+	def __display(self, loss: List[float], acc: List[float], loss_test: List[float], acc_test: List[float]) -> None:
 		"""
 		Display function
 		Args:
-			X: input data
-			y: reference data
-			X_test: test input data
-			y_test: test reference data
 			loss: loss list
+			acc: accuracy list
 			loss_test: test loss list
-		Returns:
-			None
+			acc_test: test accuracy list
 		"""
-		y_pred = self.predict_dataset(X)
-		accuracy = accuracy_score(y, y_pred)
-		print("Accuracy:", accuracy)
-
-		if X_test is not None and y_test is not None:
-			y_pred_test = self.predict_dataset(X_test)
-			accuracy_test = accuracy_score(y_test, y_pred_test)
-			print("Accuracy test:", accuracy_test)
-			plt.plot(loss_test, c='orange')
-
+		plt.figure(figsize=(12, 4))
+		plt.subplot(1, 2, 1)
 		plt.plot(loss)
-		plt.title("Loss")
+		plt.plot(loss_test)
+		plt.subplot(1, 2, 2)
+		plt.plot(acc)
+		plt.plot(acc_test)
+		plt.title("Train loss")
 		plt.show()
 
 
