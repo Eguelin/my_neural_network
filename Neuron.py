@@ -19,6 +19,8 @@ class Neuron:
 		loss: loss function
 		train: train function
 	"""
+
+
 	def __init__(self, dim: int = None, W: np.ndarray = None, b: float = None):
 		if dim is not None and dim <= 0 and W is None:
 			raise ValueError("Error: Input dimension must be greater than 0")
@@ -36,6 +38,7 @@ class Neuron:
 		else:
 			self.b: float = b
 
+
 	def model_dataset(self, X: np.ndarray) -> np.ndarray:
 		"""
 		Model function for dataset
@@ -49,6 +52,7 @@ class Neuron:
 		Z: np.ndarray = X.dot(self.W) + self.b
 		return 1 / (1 + np.exp(-Z))
 
+
 	def model(self, X: np.ndarray) -> float:
 		"""
 		Model function
@@ -60,6 +64,7 @@ class Neuron:
 		X = X.reshape((1, X.shape[0]))
 		return float(self.model_dataset(X))
 
+
 	def predict_dataset(self, X: np.ndarray) -> np.ndarray:
 		"""
 		Predict function for dataset
@@ -69,6 +74,7 @@ class Neuron:
 			np.ndarray: output data
 		"""
 		return (self.model_dataset(X) > 0.5).astype(int)
+
 
 	def predict(self, x: np.ndarray) -> int:
 		"""
@@ -95,6 +101,7 @@ class Neuron:
 		s = 1e-8
 		return float(1 / len(y) * np.sum(-y * np.log(A + s) - (1 - y) * np.log(1 - A + s)))
 
+
 	def __gradient(self, X: np.ndarray, A: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
 		"""
 		Gradient function
@@ -111,6 +118,7 @@ class Neuron:
 		db: float = float(1 / len(y) * np.sum(A - y))
 		return (dW, db)
 
+
 	def __update_weights(self, X: np.ndarray, A: np.ndarray, y: np.ndarray, lr: float) -> None:
 		"""
 		Update parameters function
@@ -122,6 +130,7 @@ class Neuron:
 		dW, db = self.__gradient(X, A, y)
 		self.W = self.W - lr * dW
 		self.b = self.b - lr * db
+
 
 	def train(self, X: np.ndarray, y: np.ndarray, lr: float, epochs: int, X_test: np.ndarray = None, y_test: np.ndarray = None, display: bool = False) -> None:
 		"""
@@ -153,6 +162,7 @@ class Neuron:
 
 		if display:
 			self.__display(X, y, X_test, y_test, loss, loss_test)
+
 
 	def __display(self, X: np.ndarray, y: np.ndarray, X_test: np.ndarray, y_test: np.ndarray, loss: List[float], loss_test: List[float]) -> None:
 		"""
