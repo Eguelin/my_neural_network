@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 from typing import List, Tuple
 from sklearn.metrics import accuracy_score
 
@@ -10,9 +11,6 @@ class Neuron:
 	Attributes:
 		W: weights
 		b: bias
-	Attributes (private):
-		__dW: weights gradient
-		__db: bias gradient
 	Methods:
 		model_dataset: model function for dataset
 		model: model function
@@ -20,19 +18,19 @@ class Neuron:
 		predict: predict function
 		loss: loss function
 		train: train function
-	Methods (private):
-		__gradient: gradient function
-		__update_parameters: update parameters function
 	"""
-	def __init__(self, dim: int, W: np.ndarray = None, b: float = None):
-		if dim < 1:
+	def __init__(self, dim: int = None, W: np.ndarray = None, b: float = None):
+		if dim is not None and dim <= 0 and W is None:
 			raise ValueError("Error: Input dimension must be greater than 0")
+
+		if dim is None and W is None:
+			raise ValueError("Error: Input dimension or weights must be provided")
+
 		if W is None:
 			self.W: np.ndarray = np.random.randn(dim, 1) * np.sqrt(2 / dim) # He initialization
-		elif W.shape != (dim, 1):
-			raise ValueError("Error: Weights must have the same dimension as input data")
 		else:
 			self.W: np.ndarray = W
+
 		if b is None:
 			self.b: float = 0.0
 		else:
@@ -94,7 +92,8 @@ class Neuron:
 		"""
 		if A.shape != y.shape:
 			raise ValueError("Error: Output data and reference data must have the same shape")
-		return float(1 / len(y) * np.sum(-y * np.log(A) - (1 - y) * np.log(1 - A)))
+		s = 1e-8
+		return float(1 / len(y) * np.sum(-y * np.log(A + s) - (1 - y) * np.log(1 - A + s)))
 
 	def __gradient(self, X: np.ndarray, A: np.ndarray, y: np.ndarray) -> Tuple[np.ndarray, float]:
 		"""
@@ -112,7 +111,7 @@ class Neuron:
 		db: float = float(1 / len(y) * np.sum(A - y))
 		return (dW, db)
 
-	def __update_parameters(self, X: np.ndarray, A: np.ndarray, y: np.ndarray, lr: float) -> None:
+	def __update_weights(self, X: np.ndarray, A: np.ndarray, y: np.ndarray, lr: float) -> None:
 		"""
 		Update parameters function
 		Args:
@@ -124,7 +123,7 @@ class Neuron:
 		self.W = self.W - lr * dW
 		self.b = self.b - lr * db
 
-	def train(self, X: np.ndarray, y: np.ndarray, lr: float, epochs: int) -> Tuple[List[float], float]:
+	def train(self, X: np.ndarray, y: np.ndarray, lr: float, epochs: int, X_test: np.ndarray = None, y_test: np.ndarray = None, display: bool = False) -> None:
 		"""
 		Train function
 		Args:
@@ -132,22 +131,58 @@ class Neuron:
 			y: reference data
 			lr: learning rate
 			epochs: number of epochs
+			display: display flag
+			X_test: test input data
+			y_test: test reference data
 		Returns:
-			Tuple[List[float], float]: loss and accuracy
+			None
 		"""
-		if X.shape[0] != y.shape[0]:
+		if X.shape[0] != y.shape[0] or (X_test is not None and y_test is not None and X_test.shape[0] != y_test.shape[0] != X.shape[0]):
 			raise ValueError("Error: Input data and reference data must have the same number of samples")
+
 		loss: List[float] = []
+		loss_test: List[float] = []
+
 		for i in range(epochs):
 			A: np.ndarray = self.model_dataset(X)
-			self.__update_parameters(X, A, y,lr)
+			self.__update_weights(X, A, y, lr)
 			loss.append(self.loss(A, y))
+			if display and X_test is not None and y_test is not None:
+				A_test = self.model_dataset(X_test)
+				loss_test.append(self.loss(A_test, y_test))
+
+		if display:
+			self.__display(X, y, X_test, y_test, loss, loss_test)
+
+	def __display(self, X: np.ndarray, y: np.ndarray, X_test: np.ndarray, y_test: np.ndarray, loss: List[float], loss_test: List[float]) -> None:
+		"""
+		Display function
+		Args:
+			X: input data
+			y: reference data
+			X_test: test input data
+			y_test: test reference data
+			loss: loss list
+			loss_test: test loss list
+		Returns:
+			None
+		"""
 		y_pred = self.predict_dataset(X)
 		accuracy = accuracy_score(y, y_pred)
-		return (loss, accuracy)
+		print("Accuracy:", accuracy)
+
+		if X_test is not None and y_test is not None:
+			y_pred_test = self.predict_dataset(X_test)
+			accuracy_test = accuracy_score(y_test, y_pred_test)
+			print("Accuracy test:", accuracy_test)
+			plt.plot(loss_test, c='orange')
+
+		plt.plot(loss)
+		plt.title("Loss")
+		plt.show()
+
 
 if __name__ == "__main__":
-	import matplotlib.pyplot as plt
 	from sklearn.datasets import make_blobs
 
 	X, y = make_blobs(n_samples=1000, centers=2, n_features=2, random_state=42)
@@ -157,11 +192,7 @@ if __name__ == "__main__":
 	# plt.show()
 
 	neuron = Neuron(X.shape[1])
-	loss, accuracy = neuron.train(X, y, 0.1, 1000)
-
-	print("Accuracy:", accuracy)
-	plt.plot(loss)
-	plt.show()
+	neuron.train(X, y, 0.1, 1000, display=True)
 
 	test = np.array([1, 4])
 	prob = neuron.model(test)
