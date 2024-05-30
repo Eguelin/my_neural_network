@@ -1,3 +1,5 @@
 *
-!Neuron.py
+!*/
+!*.py
+!*.hdf5
 !.gitignore

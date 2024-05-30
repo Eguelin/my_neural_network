@@ -37,7 +37,7 @@ class Neuron:
 			raise ValueError("Error: Input dimension or weights must be provided")
 
 		if W is None:
-			self.W: np.ndarray = np.random.randn(dim, 1) * np.sqrt(2 / dim) # He initialization
+			self.W: np.ndarray = np.random.randn(dim, 1)
 		else:
 			self.W: np.ndarray = W
 
